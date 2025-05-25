@@ -1,0 +1,59 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# Virtual Environment
+bin/
+lib/
+lib64
+include/
+etc/
+share/
+pyvenv.cfg
+.env
+.venv
+env/
+venv/
+ENV/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# VS Code
+.vscode/
+
+# PyCharm
+.idea/
+
+# Data files that don't need to be tracked
+*.csv
+*.bag
+*.ply
+
+# Images (uncomment if you want to exclude them)
+# *.png
+# *.jpg
+# *.jpeg
+
+# Log files
+*.log
+
+# Local configuration
+.DS_Store
+.directory
+Thumbs.db
+
+# Test cache
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Temp files
+*.tmp
+*~
