@@ -31,10 +31,6 @@ ENV/
 # PyCharm
 .idea/
 
-# Data files that don't need to be tracked
-*.csv
-*.bag
-*.ply
 
 # Images (uncomment if you want to exclude them)
 # *.png

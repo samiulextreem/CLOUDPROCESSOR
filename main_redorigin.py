@@ -2,10 +2,10 @@ import numpy as np
 import open3d as o3d
 
 # 1. Load your existing point cloud
-pcd = o3d.io.read_point_cloud("astra.ply")
+pcd = o3d.io.read_point_cloud("d435.ply")
 
 # 2. Create a RED cube at origin
-cube_size = 0.2  # Size of the cube (in meters)
+cube_size = 0.02  # Size of the cube (in meters)
 resolution = 20   # Points per edge (controls density)
 
 # Generate cube points
@@ -35,7 +35,7 @@ combined_pcd.points = o3d.utility.Vector3dVector(combined_points)
 combined_pcd.colors = o3d.utility.Vector3dVector(combined_colors)
 
 # 4. Save and visualize
-output_path = "astra_with_red_cube.ply"
+output_path = "d435_red_cube.ply"
 o3d.io.write_point_cloud(output_path, combined_pcd)
 print(f"Saved red cube at origin to: {output_path}")
 

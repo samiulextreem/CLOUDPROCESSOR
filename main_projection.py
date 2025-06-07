@@ -4,7 +4,7 @@ import cv2
 import pandas as pd  # For CSV export
 
 # Load point cloud
-pcd = o3d.io.read_point_cloud("astra.ply")
+pcd = o3d.io.read_point_cloud("d435.ply")
 points = np.asarray(pcd.points)
 colors = np.asarray(pcd.colors)
 
@@ -12,7 +12,7 @@ if colors.shape[0] == 0:
     raise ValueError("Point cloud has no colors!")
 
 # Camera parameters
-img_width, img_height = 640, 480
+img_width, img_height = 1280, 720
 focal_length = 500  # Adjust based on FOV
 cx, cy = img_width // 2, img_height // 2  # Image center
 
@@ -20,7 +20,7 @@ cx, cy = img_width // 2, img_height // 2  # Image center
 x, y, z = points[:, 0], points[:, 1], points[:, 2]
 
 # Filter points in front of the camera (z > 0)
-valid = z > 0
+valid = z < 0
 x, y, z = x[valid], y[valid], z[valid]
 colors = colors[valid]
 

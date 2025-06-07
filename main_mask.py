@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 
 # Load the image
-image = cv2.imread("image.png")  # Replace with your image path
+image = cv2.imread("d435_Color.png")  # Replace with your image path
 image_hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)  # Convert to HSV
 
 # Define green color range in HSV (adjust these values!)
@@ -17,4 +17,4 @@ mask = cv2.erode(mask, None, iterations=1)  # Remove small noise
 mask = cv2.dilate(mask, None, iterations=2)  # Fill gaps
 
 # Save the mask
-cv2.imwrite("mask.png", mask)
+cv2.imwrite("d435mask.png", mask)

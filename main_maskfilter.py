@@ -6,7 +6,7 @@ import pandas as pd
 # ----------------------------
 # 1. Load and Prepare Point Cloud
 # ----------------------------
-pcd = o3d.io.read_point_cloud("astra.ply")
+pcd = o3d.io.read_point_cloud("d435.ply")
 points = np.asarray(pcd.points)
 colors = np.asarray(pcd.colors)
 
@@ -16,12 +16,12 @@ if colors.shape[0] == 0:
 # ----------------------------
 # 2. Camera Projection Setup
 # ----------------------------
-img_width, img_height = 640, 480
+img_width, img_height = 1280, 720
 focal_length = 500  # Adjust for field of view
 cx, cy = img_width // 2, img_height // 2
 
 # Filter points in front of camera
-valid = points[:, 2] > 0
+valid = points[:, 2] < 0
 x, y, z = points[valid, 0], points[valid, 1], points[valid, 2]
 colors = colors[valid]
 
@@ -60,7 +60,7 @@ cv2.imwrite("projected_image.png", cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
 # ----------------------------
 # 4. Apply Binary Mask
 # ----------------------------
-mask = cv2.imread("mask.png", cv2.IMREAD_GRAYSCALE)
+mask = cv2.imread("d435mask.png", cv2.IMREAD_GRAYSCALE)
 if mask is None:
     raise FileNotFoundError("mask.png not found")
 
@@ -82,10 +82,31 @@ masked_image = cv2.bitwise_and(image, image, mask=binary_mask)
 cv2.imwrite("masked_projection.png", cv2.cvtColor(masked_image, cv2.COLOR_RGB2BGR))
 
 # ----------------------------
-# 5. Visualization
+# 5. Create filtered point cloud with colors
 # ----------------------------
+# Extract 3D points and colors from masked points dataframe
+filtered_points = masked_points_df[["x", "y", "z"]].values
+filtered_colors = masked_points_df[["r", "g", "b"]].values
+
+# Create new point cloud from filtered points
+filtered_pcd = o3d.geometry.PointCloud()
+filtered_pcd.points = o3d.utility.Vector3dVector(filtered_points)
+filtered_pcd.colors = o3d.utility.Vector3dVector(filtered_colors)  # Add colors to the point cloud
+
+# Save the filtered point cloud
+o3d.io.write_point_cloud("filtered_masked_points.ply", filtered_pcd)
+print(f"Saved filtered point cloud with {len(filtered_points)} points and colors")
+
+# ----------------------------
+# 6. Visualization
+# ----------------------------
+# 2D visualization
 cv2.imshow("Projected Image", cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
 cv2.imshow("Binary Mask", binary_mask)
 cv2.imshow("Masked Projection", cv2.cvtColor(masked_image, cv2.COLOR_RGB2BGR))
 cv2.waitKey(0)
 cv2.destroyAllWindows()
+
+# 3D visualization of filtered point cloud
+print("Visualizing filtered point cloud (with colors)...")
+o3d.visualization.draw_geometries([filtered_pcd])
