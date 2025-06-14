@@ -1,0 +1,99 @@
+# Python CLOUDPROCESSOR Project .gitignore
+# Created on June 14, 2025
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+dist/
+build/
+develop-eggs/
+downloads/
+eggs/
+.eggs/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+bin/
+lib/
+lib64/
+include/
+etc/
+share/
+Scripts/
+pyvenv.cfg
+.env
+.venv
+env/
+venv/
+ENV/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+.ipynb_checkpoints/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+.project
+.pydevproject
+
+# Large model files & datasets
+*.pth
+model_final.pth
+dataset/*/output/model_*.pth
+dataset/output/model_*.pth
+*.weights
+*.pt
+
+# Point cloud data (uncomment if you want to exclude them)
+# *.ply
+
+# Images (uncomment if you want to exclude them)
+# *.png
+# *.jpg
+# *.jpeg
+
+# Log files
+*.log
+*.out
+logs/
+tensorboard/
+
+# Local configuration
+.DS_Store
+.directory
+Thumbs.db
+desktop.ini
+
+# Test cache
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+.tox/
+nosetests.xml
+
+# Temp files
+*.tmp
+*~
+.*.sw?
+*#
+
+# Detectron2 specific
+*.pkl
+*.pyc
+detectron2/build/
+detectron2/dist/
+
+# Git
+.git/hooks/
+.git/info/
+.git/objects/
+.git/refs/
