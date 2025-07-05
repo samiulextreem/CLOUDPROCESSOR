@@ -1,0 +1,22 @@
+# Core dependencies for point cloud processing
+open3d==0.19.0
+numpy==2.2.6
+opencv-python==4.11.0.86
+pandas==2.3.0
+matplotlib==3.10.3
+
+# For additional analysis and processing
+scikit-learn==1.4.2
+scipy==1.13.0
+tqdm==4.66.2
+
+# For Detectron2 support (required for asparagus detection)
+torch>=1.10.0
+torchvision>=0.11.0
+fvcore
+pyyaml
+# detectron2 - installed from source via git clone
+
+# Jupyter support for notebooks
+ipykernel==6.29.0
+notebook==7.0.6
