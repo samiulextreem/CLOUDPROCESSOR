@@ -16,9 +16,9 @@ if colors.shape[0] == 0:
 # ----------------------------
 # 2. Camera Projection Setup
 # ----------------------------
-img_width, img_height = 1020, 1020  # RealSense D435 default resolution
-# RealSense D435 typical parameters (adjust if you have calibrated values)
-fx, fy = 850, 850  # Horizontal and vertical focal lengths
+img_width, img_height = 1280, 720  # Original camera dimensions (16:9 aspect ratio)
+# RealSense D435 calibrated parameters
+fx, fy = 1125, 900  # Optimized focal lengths from calibration
 cx, cy = img_width // 2, img_height // 2  # Principal point (center of image)
 
 # Filter points in front of camera
