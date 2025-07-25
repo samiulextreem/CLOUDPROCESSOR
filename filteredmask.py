@@ -4,8 +4,6 @@ import cv2
 import pandas as pd
 import os
 
-# Set environment variable to fix Qt plugin issue for 3D visualization
-os.environ["QT_QPA_PLATFORM"] = "xcb"
 
 # ----------------------------
 # 1. Load and Prepare Point Cloud
@@ -103,25 +101,37 @@ except IndexError as e:
     # Continue with an empty DataFrame to avoid breaking the pipeline
     masked_points_df = pd.DataFrame(columns=columns)
 
-# Create masked image
-masked_image = cv2.bitwise_and(image, image, mask=binary_mask)
-cv2.imwrite("masked_projection.png", cv2.cvtColor(masked_image, cv2.COLOR_RGB2BGR))
+# Create highlighted image with red pixels for masked areas
+highlighted_image = image.copy()
+# Make masked pixels red
+highlighted_image[binary_mask == 255] = [255, 0, 0]  # Red color in RGB
+cv2.imwrite("masked_projection.png", cv2.cvtColor(highlighted_image, cv2.COLOR_RGB2BGR))
 
 # ----------------------------
-# 5. Create filtered point cloud with colors
+# 5. Create filtered point cloud with colors (all points, with red highlighting)
 # ----------------------------
-# Extract 3D points and colors from masked points dataframe
-filtered_points = masked_points_df[["x", "y", "z"]].values
-filtered_colors = masked_points_df[["r", "g", "b"]].values
+# Start with all visible points
+all_points = visible_points_df[["x", "y", "z"]].values
+all_colors = visible_points_df[["r", "g", "b"]].values.copy()
 
-# Create new point cloud from filtered points
+# Highlight masked points in red
+if len(masked_points_df) > 0:
+    try:
+        mask_values = binary_mask[visible_points_df["v"], visible_points_df["u"]]
+        mask_indices = mask_values == 255
+        all_colors[mask_indices] = [1.0, 0.0, 0.0]  # Set to red (RGB values in range 0-1)
+        print(f"Highlighted {np.sum(mask_indices)} points in red")
+    except IndexError as e:
+        print(f"Error highlighting points: {e}")
+
+# Create new point cloud with all points (highlighted ones in red)
 filtered_pcd = o3d.geometry.PointCloud()
-filtered_pcd.points = o3d.utility.Vector3dVector(filtered_points)
-filtered_pcd.colors = o3d.utility.Vector3dVector(filtered_colors)  # Add colors to the point cloud
+filtered_pcd.points = o3d.utility.Vector3dVector(all_points)
+filtered_pcd.colors = o3d.utility.Vector3dVector(all_colors)
 
-# Save the filtered point cloud
+# Save the point cloud with red highlighting
 o3d.io.write_point_cloud("points.ply", filtered_pcd)
-print(f"Saved filtered point cloud with {len(filtered_points)} points and colors")
+print(f"Saved point cloud with {len(all_points)} total points (masked points highlighted in red)")
 
 # ----------------------------
 # 6. Visualization
@@ -129,10 +139,10 @@ print(f"Saved filtered point cloud with {len(filtered_points)} points and colors
 # 2D visualization
 cv2.imshow("Projected Image", cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
 cv2.imshow("Binary Mask", binary_mask)
-cv2.imshow("Masked Projection", cv2.cvtColor(masked_image, cv2.COLOR_RGB2BGR))
+cv2.imshow("Highlighted Projection", cv2.cvtColor(highlighted_image, cv2.COLOR_RGB2BGR))
 cv2.waitKey(0)
 cv2.destroyAllWindows()
 
-# 3D visualization of filtered point cloud
-print("Visualizing filtered point cloud (with colors)...")
+# 3D visualization of point cloud with red highlighting
+print("Visualizing point cloud with red highlighting for masked areas...")
 o3d.visualization.draw_geometries([filtered_pcd])
