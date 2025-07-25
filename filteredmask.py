@@ -2,6 +2,10 @@ import open3d as o3d
 import numpy as np
 import cv2
 import pandas as pd
+import os
+
+# Set environment variable to fix Qt plugin issue for 3D visualization
+os.environ["QT_QPA_PLATFORM"] = "xcb"
 
 # ----------------------------
 # 1. Load and Prepare Point Cloud
@@ -61,14 +65,13 @@ visible_points_df = pd.DataFrame(visible_points, columns=columns)
 cv2.imwrite("projected_image.png", cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
 
 
-input("Projected image saved as 'projected_image.png'. Press Enter to continue...")
 # ----------------------------
 # 4. Apply Binary Mask
 # ----------------------------
 # mask = cv2.imread("binary_mask.png", cv2.IMREAD_GRAYSCALE)
-mask = cv2.imread("cut_points_mask.png", cv2.IMREAD_GRAYSCALE)
+mask = cv2.imread("final_mask.png", cv2.IMREAD_GRAYSCALE)
 if mask is None:
-    raise FileNotFoundError("AI_mask.png not found")
+    raise FileNotFoundError("final_mask.png not found")
     
 # Print mask dimensions for debugging
 print(f"Mask dimensions: {mask.shape}")
