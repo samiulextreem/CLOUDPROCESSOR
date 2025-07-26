@@ -60,6 +60,9 @@ dataset/output/model_*.pth
 # *.jpg
 # *.jpeg
 
+# Output folder
+output/
+
 # Log files
 *.log
 *.out
