@@ -4,11 +4,14 @@ import cv2
 import pandas as pd
 import os
 
+# Get the parent directory path (CLOUDPROCESSOR folder)
+parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # ----------------------------
 # 1. Load and Prepare Point Cloud
 # ----------------------------
-pcd = o3d.io.read_point_cloud("d435.ply")
+ply_path = os.path.join(parent_dir, "data_source", "d435.ply")
+pcd = o3d.io.read_point_cloud(ply_path)
 points = np.asarray(pcd.points)
 colors = np.asarray(pcd.colors)
 
@@ -60,21 +63,25 @@ visible_points_df = pd.DataFrame(visible_points, columns=columns)
 
 
 # Save projected image
-cv2.imwrite("projected_image.png", cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
+output_dir = os.path.join(parent_dir, "output")
+os.makedirs(output_dir, exist_ok=True)  # Create output directory if it doesn't exist
+cv2.imwrite(os.path.join(output_dir, "projected_image.png"), cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
 
 
 # ----------------------------
 # 4. Apply Binary Mask
 # ----------------------------
 # mask = cv2.imread("binary_mask.png", cv2.IMREAD_GRAYSCALE)
-mask = cv2.imread("final_mask.png", cv2.IMREAD_GRAYSCALE)
+mask_path = os.path.join(parent_dir, "data_source", "final_mask.png")
+mask = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)
 if mask is None:
-    raise FileNotFoundError("final_mask.png not found")
+    raise FileNotFoundError(f"final_mask.png not found at {mask_path}")
 
 # Load the original D435 color image
-d435_image = cv2.imread("d435_Color.png")
+d435_image_path = os.path.join(parent_dir, "data_source", "d435_Color.png")
+d435_image = cv2.imread(d435_image_path)
 if d435_image is None:
-    raise FileNotFoundError("d435_Color.png not found")
+    raise FileNotFoundError(f"d435_Color.png not found at {d435_image_path}")
 
 # Convert BGR to RGB for consistency
 d435_image_rgb = cv2.cvtColor(d435_image, cv2.COLOR_BGR2RGB)
@@ -91,8 +98,8 @@ d435_with_red_dots = d435_image_rgb.copy()
 d435_with_red_dots[binary_mask_d435 == 255] = [255, 0, 0]  # Red color in RGB
 
 # Save the image with red dots
-cv2.imwrite("d435_with_red_dots.png", cv2.cvtColor(d435_with_red_dots, cv2.COLOR_RGB2BGR))
-print(f"Saved d435_Color.png with red dots overlay as 'd435_with_red_dots.png'")
+cv2.imwrite(os.path.join(output_dir, "d435_with_red_dots.png"), cv2.cvtColor(d435_with_red_dots, cv2.COLOR_RGB2BGR))
+print(f"Saved d435_Color.png with red dots overlay as '{os.path.join(output_dir, 'd435_with_red_dots.png')}'")
 
 # Print mask dimensions for debugging
 print(f"Mask dimensions: {mask.shape}")
@@ -116,7 +123,7 @@ try:
         print(f"Mask has {np.sum(binary_mask == 255)} white pixels")
         print(f"Visible points count: {len(visible_points_df)}")
     else:
-        masked_points_df.to_csv("masked_3d_points.csv", index=False)
+        masked_points_df.to_csv(os.path.join(output_dir, "masked_3d_points.csv"), index=False)
         print(f"Saved {len(masked_points_df)} masked points")
 except IndexError as e:
     print(f"Error applying mask: {e}")
@@ -128,7 +135,7 @@ except IndexError as e:
 highlighted_image = image.copy()
 # Make masked pixels red
 highlighted_image[binary_mask == 255] = [255, 0, 0]  # Red color in RGB
-cv2.imwrite("masked_projection.png", cv2.cvtColor(highlighted_image, cv2.COLOR_RGB2BGR))
+cv2.imwrite(os.path.join(output_dir, "masked_projection.png"), cv2.cvtColor(highlighted_image, cv2.COLOR_RGB2BGR))
 
 # ----------------------------
 # 5. Create filtered point cloud with colors (all points, with red highlighting)
@@ -193,8 +200,8 @@ if len(masked_points_df) > 0:
             # Export center positions to CSV
             if center_positions:
                 positions_df = pd.DataFrame(center_positions)
-                positions_df.to_csv("position_final.csv", index=False)
-                print(f"\nExported {len(center_positions)} center positions to 'position_final.csv'")
+                positions_df.to_csv(os.path.join(output_dir, "position_final.csv"), index=False)
+                print(f"\nExported {len(center_positions)} center positions to '{os.path.join(output_dir, 'position_final.csv')}'")
             else:
                 print("\nNo center positions to export")
         
@@ -207,7 +214,7 @@ filtered_pcd.points = o3d.utility.Vector3dVector(all_points)
 filtered_pcd.colors = o3d.utility.Vector3dVector(all_colors)
 
 # Save the point cloud with red highlighting
-o3d.io.write_point_cloud("points.ply", filtered_pcd)
+o3d.io.write_point_cloud(os.path.join(output_dir, "points.ply"), filtered_pcd)
 print(f"Saved point cloud with {len(all_points)} total points (masked points highlighted in red)")
 
 # ----------------------------
