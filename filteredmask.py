@@ -70,7 +70,30 @@ cv2.imwrite("projected_image.png", cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
 mask = cv2.imread("final_mask.png", cv2.IMREAD_GRAYSCALE)
 if mask is None:
     raise FileNotFoundError("final_mask.png not found")
-    
+
+# Load the original D435 color image
+d435_image = cv2.imread("d435_Color.png")
+if d435_image is None:
+    raise FileNotFoundError("d435_Color.png not found")
+
+# Convert BGR to RGB for consistency
+d435_image_rgb = cv2.cvtColor(d435_image, cv2.COLOR_BGR2RGB)
+
+# Resize mask to match the d435 image dimensions if needed
+d435_height, d435_width = d435_image.shape[:2]
+mask_for_d435 = cv2.resize(mask, (d435_width, d435_height))
+
+# Create binary mask
+_, binary_mask_d435 = cv2.threshold(mask_for_d435, 127, 255, cv2.THRESH_BINARY)
+
+# Create image with red dots
+d435_with_red_dots = d435_image_rgb.copy()
+d435_with_red_dots[binary_mask_d435 == 255] = [255, 0, 0]  # Red color in RGB
+
+# Save the image with red dots
+cv2.imwrite("d435_with_red_dots.png", cv2.cvtColor(d435_with_red_dots, cv2.COLOR_RGB2BGR))
+print(f"Saved d435_Color.png with red dots overlay as 'd435_with_red_dots.png'")
+
 # Print mask dimensions for debugging
 print(f"Mask dimensions: {mask.shape}")
 print(f"Image dimensions: {image.shape[:2]}")
@@ -121,6 +144,60 @@ if len(masked_points_df) > 0:
         mask_indices = mask_values == 255
         all_colors[mask_indices] = [1.0, 0.0, 0.0]  # Set to red (RGB values in range 0-1)
         print(f"Highlighted {np.sum(mask_indices)} points in red")
+        
+        # Print center positions of masked (red) points grouped by connected components
+        print("\n=== Center Positions of Masked Regions ===")
+        
+        # Find connected components in the binary mask to identify individual circles/regions
+        num_labels, labels = cv2.connectedComponents(binary_mask)
+        
+        # Get the masked points (red points)
+        red_points = visible_points_df[mask_indices]
+        
+        if len(red_points) > 0:
+            # List to store center positions for CSV export
+            center_positions = []
+            
+            # Group points by connected components
+            for label in range(1, num_labels):  # Skip label 0 (background)
+                # Create mask for this specific component
+                component_mask = (labels == label).astype(np.uint8) * 255
+                
+                # Find points belonging to this component
+                component_points = []
+                for idx, row in red_points.iterrows():
+                    u, v = int(row['u']), int(row['v'])
+                    if component_mask[v, u] == 255:
+                        component_points.append(row)
+                
+                if component_points:
+                    # Calculate center position (average of all points in this region)
+                    x_coords = [p['x'] for p in component_points]
+                    y_coords = [p['y'] for p in component_points]
+                    z_coords = [p['z'] for p in component_points]
+                    
+                    center_x = np.mean(x_coords)
+                    center_y = np.mean(y_coords)
+                    center_z = np.mean(z_coords)
+                    
+                    print(f"Region {label}: X={center_x:.6f}, Y={center_y:.6f}, Z={center_z:.6f}")
+                    
+                    # Add to list for CSV export
+                    center_positions.append({
+                        'Region': label,
+                        'X': center_x,
+                        'Y': center_y,
+                        'Z': center_z
+                    })
+            
+            # Export center positions to CSV
+            if center_positions:
+                positions_df = pd.DataFrame(center_positions)
+                positions_df.to_csv("position_final.csv", index=False)
+                print(f"\nExported {len(center_positions)} center positions to 'position_final.csv'")
+            else:
+                print("\nNo center positions to export")
+        
     except IndexError as e:
         print(f"Error highlighting points: {e}")
 
@@ -146,3 +223,8 @@ cv2.destroyAllWindows()
 # 3D visualization of point cloud with red highlighting
 print("Visualizing point cloud with red highlighting for masked areas...")
 o3d.visualization.draw_geometries([filtered_pcd])
+
+
+
+
+
