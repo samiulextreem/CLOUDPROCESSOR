@@ -1,81 +1,69 @@
 import sys
 import os
 
-# Add utilities folder to path if it exists
-if os.path.exists('utilities'):
-    sys.path.append('utilities')
+# Add utilities folder to path
+sys.path.append('utilities')
 
-# Import the filteredmask functionality
-try:
-    import filteredmask
-    print("✓ Successfully imported filteredmask module")
-except ImportError:
-    print("⚠ Could not import filteredmask module - running as standalone script")
+def main():
+    """Main function orchestrating the entire pipeline using PointCloudProcessor class"""
+    print("🚀 Starting Point Cloud Processing Pipeline")
     
-# Import position verification functionality
-try:
-    import position_verification
-    print("✓ Successfully imported position_verification module")
-except ImportError:
-    print("⚠ Could not import position_verification module")
-
-def run_point_cloud_filtering():
-    """Run the point cloud filtering pipeline"""
-    print("\n" + "="*50)
-    print("POINT CLOUD FILTERING PIPELINE")
-    print("="*50)
+    # Import the PointCloudProcessor class
+    try:
+        from utilities.filteredmask import PointCloudProcessor
+        print("✓ Successfully imported PointCloudProcessor class")
+    except ImportError as e:
+        print(f"❌ Could not import PointCloudProcessor class: {e}")
+        return False
+    
+    # Check if required files exist
+    required_files = ['data_source/d435.ply', 'data_source/final_mask.png', 'data_source/d435_Color.png']
+    missing_files = [f for f in required_files if not os.path.exists(f)]
+    
+    if missing_files:
+        print(f"❌ Missing required files: {missing_files}")
+        return False
+        
+    print("✓ All required files found")
     
     try:
-        # Check if required files exist
-        required_files = ['data_source/d435.ply', 'data_source/final_mask.png', 'data_source/d435_Color.png']
-        missing_files = [f for f in required_files if not os.path.exists(f)]
+        # Create PointCloudProcessor instance
+        processor = PointCloudProcessor()
+        print("✓ Created PointCloudProcessor instance")
         
-        if missing_files:
-            print(f"❌ Missing required files: {missing_files}")
-            return False
-            
-        print("✓ All required files found")
+        # Run the complete pipeline
+        print("\n" + "="*50)
+        print("POINT CLOUD PROCESSING PIPELINE")
+        print("="*50)
         
-        # Run the filtering process
-        print("🔄 Starting point cloud filtering...")
+        results = processor.process_complete_pipeline(
+            ply_filename="d435.ply",
+            mask_filename="final_mask.png", 
+            color_image_filename="d435_Color.png",
+            show_visualizations=False,  # Set to True if you want to see visualizations
+            run_verification=True  # This will automatically run position verification
+        )
         
-        # Execute the filteredmask script from utilities folder
-        filteredmask_path = os.path.join('utilities', 'filteredmask.py')
-        exec(open(filteredmask_path).read())
+        # The verification is now integrated into the pipeline
+        if results.get('verification_completed', False):
+            print("✅ Position verification completed successfully!")
+        else:
+            print("⚠ Position verification was not completed")
         
-        print("✅ Point cloud filtering completed successfully!")
+        # Step 3: Display results
+        display_results(results)
+        
+        print("\n🎉 Pipeline completed successfully!")
+        print("Ready for analysis and visualization!")
         return True
         
     except Exception as e:
-        print(f"❌ Error during filtering: {e}")
+        print(f"❌ Error during processing: {e}")
+        import traceback
+        traceback.print_exc()
         return False
 
-def run_position_verification():
-    """Run the position verification with yellow cubes"""
-    print("\n" + "="*50)
-    print("POSITION VERIFICATION")
-    print("="*50)
-    
-    try:
-        # Check if position_final.csv exists
-        if not os.path.exists('output/position_final.csv'):
-            print("❌ output/position_final.csv not found. Run filtering first.")
-            return False
-            
-        print("✓ Position file found")
-        print("🔄 Creating verification visualization...")
-        
-        # Execute the position verification script
-        exec(open('position_verification.py').read())
-        
-        print("✅ Position verification completed successfully!")
-        return True
-        
-    except Exception as e:
-        print(f"❌ Error during verification: {e}")
-        return False
-
-def display_results():
+def display_results(results=None):
     """Display the results summary"""
     print("\n" + "="*50)
     print("RESULTS SUMMARY")
@@ -110,28 +98,16 @@ def display_results():
             print(f"   Objects detected: {len(df)}")
             for _, row in df.iterrows():
                 print(f"   Region {row['Region']}: X={row['X']:.6f}, Y={row['Y']:.6f}, Z={row['Z']:.6f}")
+        
+        # If results object is provided, show additional info
+        if results:
+            print(f"\n� Processing Statistics:")
+            print(f"   Total visible points: {len(results['visible_points'])}")
+            print(f"   Masked points: {len(results['masked_points'])}")
+            print(f"   Center positions found: {len(results['center_positions'])}")
+            
     except Exception as e:
         print(f"⚠ Could not display detection results: {e}")
-
-def main():
-    """Main function orchestrating the entire pipeline"""
-    print("🚀 Starting Point Cloud Processing Pipeline")
-    
-    # Step 1: Run point cloud filtering
-    if not run_point_cloud_filtering():
-        print("❌ Pipeline failed at filtering stage")
-        return False
-    
-    # Step 2: Run position verification
-    if not run_position_verification():
-        print("⚠ Verification failed, but filtering completed")
-    
-    # Step 3: Display results
-    display_results()
-    
-    print("\n🎉 Pipeline completed successfully!")
-    print("Ready for analysis and visualization!")
-    return True
 
 if __name__ == "__main__":
     try:

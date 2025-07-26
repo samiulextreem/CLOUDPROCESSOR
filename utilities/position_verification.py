@@ -1,6 +1,7 @@
 import open3d as o3d
 import numpy as np
 import pandas as pd
+import os
 
 def create_red_cube(center, size=0.01):
     """Create a yellow cube mesh at the given center position"""
@@ -11,12 +12,17 @@ def create_red_cube(center, size=0.01):
     cube.paint_uniform_color([1.0, 1.0, 0.0])  # Yellow color in RGB
     return cube
 
+# Get the parent directory path (CLOUDPROCESSOR folder)
+parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 # Read positions from CSV file
-positions_df = pd.read_csv("position_final.csv")
-print(f"Loaded {len(positions_df)} positions from position_final.csv")
+positions_csv_path = os.path.join(parent_dir, "output", "position_final.csv")
+positions_df = pd.read_csv(positions_csv_path)
+print(f"Loaded {len(positions_df)} positions from {positions_csv_path}")
 
 # Load the original point cloud
-pcd = o3d.io.read_point_cloud("d435.ply")
+ply_path = os.path.join(parent_dir, "data_source", "d435.ply")
+pcd = o3d.io.read_point_cloud(ply_path)
 print(f"Loaded point cloud with {len(pcd.points)} points")
 
 # Create a list to store all geometries (point cloud + cubes)
@@ -56,8 +62,9 @@ for i, geometry in enumerate(geometries[1:]):  # Skip the original point cloud
     combined_pcd.colors = o3d.utility.Vector3dVector(combined_colors)
 
 # Save the combined point cloud
-o3d.io.write_point_cloud("verification.ply", combined_pcd)
-print(f"Saved verification point cloud with {len(combined_pcd.points)} points to 'verification.ply'")
+output_path = os.path.join(parent_dir, "output", "verification.ply")
+o3d.io.write_point_cloud(output_path, combined_pcd)
+print(f"Saved verification point cloud with {len(combined_pcd.points)} points to '{output_path}'")
 
 # Display the positions that were marked
 print("\n=== Positions Marked with Yellow Cubes ===")
